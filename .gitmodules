@@ -1,0 +1,6 @@
+[submodule "libs/php-on-couch"]
+	path = libs/php-on-couch
+	url = git://github.com/dready92/PHP-on-Couch.git
+[submodule "fonts/open-baskerville"]
+	path = fonts/open-baskerville
+	url = git://github.com/rbmntjs/open-baskerville.git
