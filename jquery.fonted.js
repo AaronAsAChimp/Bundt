@@ -3,9 +3,149 @@ function FontedGlif(name, glif) {
 	var server_path = "";
 	var call_render = false;
 	var doc = null;
+	var doc_stack = [];
 	var surface = null;
 	
 	var em = 0;
+	
+	var renderers = {
+		"contour": function (item, ctx) {
+			var offcurve_pts = Array();
+			var deferred = null;
+			var closed = true;
+			ctx.globalCompositeOperation = "xor";
+			ctx.beginPath();
+			$(item).children("point").each(function(itm) {
+				var sx = $(this).attr("x");
+				var sy = $(this).attr("y");
+				switch($(this).attr("type")) {
+					case "move":
+						ctx.moveTo(sx, sy);
+						closed = false;
+						break;
+					case "line":
+						ctx.lineTo(sx, sy);
+						break;
+					case "curve":
+						if(offcurve_pts.length == 0 && itm == 0 && closed) {
+							deferred = mkpt(sx,sy);
+						}
+						draw_curve(ctx, offcurve_pts, mkpt(sx,sy));
+						offcurve_pts = Array();
+						break;
+					case "qcurve":
+						ctx.quadraticCurveTo(offcurve_pts[0].x,offcurve_pts[0].y, sx, sy);
+						offcurve_pts = Array();
+						break;
+					case "offcurve":
+					default:
+						offcurve_pts.push(mkpt(sx,sy));
+						break;
+				}
+				
+				
+			});
+			
+			//console.debug(deferred);
+			if(deferred) {
+				draw_curve(ctx, offcurve_pts, deferred)
+			}
+			ctx.fill();
+			//ctx.strokeStyle = "#ffcc00";
+			//ctx.lineWidth = 3;
+			//ctx.stroke();
+		},
+		
+		"contour-dbg": function (item, ctx) {
+			$(item).children("point").each(function(itm) {
+				var sx = $(this).attr("x");
+				var sy = $(this).attr("y");
+				var type = $(this).attr("type");
+				var smooth = $(this).attr("smooth");
+				ctx.save();
+				ctx.globalCompositeOperation = "source-over";
+				ctx.beginPath();
+				//console.log(type);
+				switch(type) {
+					case "line":
+					case "curve":
+					case "qcurve":
+						ctx.fillStyle = "#00ff00";
+						//ctx.arc(sx,sy,5, 0, 2 * Math.PI, false);
+						break;
+					default:
+						ctx.fillStyle = "#ff0000";
+				}
+				
+				if(!itm) {
+					ctx.fillStyle = "#0000ff";
+				}
+				ctx.arc(sx,sy,5, 0, 2 * Math.PI, false);
+				ctx.fill();
+				ctx.restore();
+			});
+		},
+		
+		"component": function (item, ctx) {
+			var base = $(item).attr("base");
+			var xscale = ($(item).attr("xScale"))? $(item).attr("xScale") : 1 ;
+			var xyscale = ($(item).attr("xyScale"))? $(item).attr("xyScale") : 0 ;
+			var yxscale = ($(item).attr("yxScale"))? $(item).attr("yxScale") : 0 ;
+			var yscale = ($(item).attr("yScale"))? $(item).attr("yScale") : 1 ;
+			var xoffset = ($(item).attr("xOffset"))? $(item).attr("xOffset") : 0 ;
+			var yoffset = ($(item).attr("yOffset"))? $(item).attr("yOffset") : 0 ;
+			
+			var sub_glif = new FontedGlif(name, base);
+			var sub_glif_surface = sub_glif.render(1000,1000, 1000);
+			
+			ctx.save();
+				ctx.transform(xscale, xyscale, yxscale, yscale, xoffset, yoffset);
+				ctx.drawImage(sub_glif_surface, 0, 0);
+			ctx.restore();
+		},
+		
+		"component-dbg": function (item, ctx) {
+			var base = $(item).attr("base");
+			var xscale = ($(item).attr("xScale"))? $(item).attr("xScale") : 1 ;
+			var xyscale = ($(item).attr("xyScale"))? $(item).attr("xyScale") : 0 ;
+			var yxscale = ($(item).attr("yxScale"))? $(item).attr("yxScale") : 0 ;
+			var yscale = ($(item).attr("yScale"))? $(item).attr("yScale") : 1 ;
+			var xoffset = ($(item).attr("xOffset"))? $(item).attr("xOffset") : 0 ;
+			var yoffset = ($(item).attr("yOffset"))? $(item).attr("yOffset") : 0 ;
+			
+			ctx.save();
+				ctx.transform(xscale, xyscale, yxscale, yscale, xoffset, yoffset);
+				// x offset
+				ctx.strokeStyle = "#00F";
+			
+				ctx.beginPath();
+				ctx.moveTo( -5, 0.5);
+				ctx.lineTo(100, 0.5);
+				ctx.stroke();
+			
+				// y offset
+				ctx.strokeStyle = "#F00";
+			
+				ctx.beginPath();
+				ctx.moveTo(0.5, -5);
+				ctx.lineTo(0.5,  100);
+				ctx.stroke();
+				
+				// y offset
+				ctx.strokeStyle = "#0F0";
+			
+				ctx.beginPath();
+				ctx.moveTo(-5, -5);
+				ctx.lineTo(100,  100);
+				ctx.stroke();
+			
+			ctx.restore();
+			
+			console.log(base);
+			console.log([xscale, xyscale, xoffset]);
+			console.log([yxscale, yscale, yoffset]);
+		}
+	}
 	
 	function draw_curve(ctx, offcurve_pts, pt) {
 		if(offcurve_pts.length == 0) {
@@ -25,8 +165,34 @@ function FontedGlif(name, glif) {
 		return {x:sx, y:sy}
 	}
 	
-	function glyph_2_filename(glyph) {
-		return glyph + ".glif"
+	this.glyph_2_filename =  function(glyph) {
+		var parts = glyph.split(".");
+		var out = "";
+		
+		if(parts[0].length == 0) { 
+			out = "_";
+			parts.shift();
+		} 
+		
+		if(parts[0].indexOf("_") >= 0) {
+			var complex = parts[0].split("_");
+			for( var i = 0; i < complex.length; i++) {
+				if(!(complex[i].charCodeAt(0) & 0x20)) {
+					complex[i] += "_";
+				}
+			}
+			
+			parts[0] = complex.join("_");
+		} else {
+			if(!(parts[0].charCodeAt(0) & 0x20)) {
+				parts[0] += "_";
+			}
+		}
+		
+		out += parts.join(".");
+		
+		console.log(out, parts);
+		return out + ".glif"
 	}
 	
 	this.render = function(w,h,em_width) {
@@ -52,83 +218,18 @@ function FontedGlif(name, glif) {
 			ctx.scale(scale, scale);
 			//ctx.scale(.2, .2);
 
-			$("contour", doc).each(function () {
-				var offcurve_pts = Array();
-				var deferred = null;
-				var closed = true;
-				ctx.globalCompositeOperation = "xor";
-				ctx.beginPath();
-				$(this).children("point").each(function(itm) {
-					var sx = $(this).attr("x");
-					var sy = $(this).attr("y");
-					switch($(this).attr("type")) {
-						case "move":
-							ctx.moveTo(sx, sy);
-							closed = false;
-							break;
-						case "line":
-							ctx.lineTo(sx, sy);
-							break;
-						case "curve":
-							if(offcurve_pts.length == 0 && itm == 0 && closed) {
-								deferred = mkpt(sx,sy);
-							}
-							draw_curve(ctx, offcurve_pts, mkpt(sx,sy));
-							offcurve_pts = Array();
-							break;
-						case "qcurve":
-							ctx.quadraticCurveTo(offcurve_pts[0].x,offcurve_pts[0].y, sx, sy);
-							offcurve_pts = Array();
-							break;
-						case "offcurve":
-						default:
-							offcurve_pts.push(mkpt(sx,sy));
-							break;
-					}
-					
-					
-				});
+			$("outline", doc).children().each(function () {
 				
-				//console.debug(deferred);
-				if(deferred) {
-					draw_curve(ctx, offcurve_pts, deferred)
-				}
-				ctx.fill();
-				//ctx.strokeStyle = "#ffcc00";
-				//ctx.lineWidth = 3;
-				//ctx.stroke();
+				renderers[this.tagName](this, ctx);
 			
 			});
 			
-			/**/$("contour", doc).each(function () {
-				$(this).children("point").each(function(itm) {
-					var sx = $(this).attr("x");
-					var sy = $(this).attr("y");
-					var type = $(this).attr("type");
-					var smooth = $(this).attr("smooth");
-					ctx.save();
-					ctx.globalCompositeOperation = "source-over";
-					ctx.beginPath();
-					//console.log(type);
-					switch(type) {
-						case "line":
-						case "curve":
-						case "qcurve":
-							ctx.fillStyle = "#00ff00";
-							//ctx.arc(sx,sy,5, 0, 2 * Math.PI, false);
-							break;
-						default:
-							ctx.fillStyle = "#ff0000";
-					}
-					
-					if(!itm) {
-						ctx.fillStyle = "#0000ff";
-					}
-					ctx.arc(sx,sy,5, 0, 2 * Math.PI, false);
-					ctx.fill();
-					ctx.restore();
-				});
+			$("outline", doc).children().each(function () {
+				
+				renderers[this.tagName + "-dbg"](this, ctx);
+			
 			});
+			
 		}
 		
 		return surface;
@@ -137,7 +238,7 @@ function FontedGlif(name, glif) {
 	this.load = function(name, glif) {
 		//console.log("Reticulating Splines");
 		
-		server_path = name + ".ufo/glyphs/" + glyph_2_filename(glif);
+		server_path = "fonts/" + name + ".ufo/glyphs/" + this.glyph_2_filename(glif);
 		$.ajax({
 			type: "GET",
 			dataType: "xml",
@@ -147,6 +248,9 @@ function FontedGlif(name, glif) {
 				if(call_render) {
 					this_c.render();
 				}
+			},
+			error: function(xhr, status, error){
+				console.log(xhr, status, error);
 			}
 		});
 	}
@@ -156,16 +260,12 @@ function FontedGlif(name, glif) {
 
 jQuery.fn.fonted = function (font) {
 	var glyphs = [
-		new FontedGlif(font, "A_"),
-		new FontedGlif(font, "germandbls"),
-		new FontedGlif(font, "C_"),
-		new FontedGlif(font, "D_"),
-		new FontedGlif(font, "E_"),
-		new FontedGlif(font, "at"),
-		new FontedGlif(font, "b"),
-		new FontedGlif(font, "copyright"),
-		new FontedGlif(font, "d"),
-		new FontedGlif(font, "percent")
+		//new FontedGlif(font, "F_A_B"),
+		//new FontedGlif(font, "testglyph1"),
+		new FontedGlif(font, "F"),
+		new FontedGlif(font, "A"),
+		new FontedGlif(font, "B"),
+		new FontedGlif(font, "Zcaron")
 	];
 	return this.each(function(){
 		for(var i = 0; i < glyphs.length; i++) {
