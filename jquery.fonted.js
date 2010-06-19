@@ -1,10 +1,8 @@
-function FontedGlif(name, glif) {
+function FontedGlif(name, glif, surface) {
 	var this_c = this;
 	var server_path = "";
-	var call_render = false;
-	var doc = null;
-	var doc_stack = [];
-	var surface = null;
+	var queue_draw = false;
+	var draw_queue = {};
 	
 	var em = 0;
 	
@@ -95,13 +93,11 @@ function FontedGlif(name, glif) {
 			var xoffset = ($(item).attr("xOffset"))? $(item).attr("xOffset") : 0 ;
 			var yoffset = ($(item).attr("yOffset"))? $(item).attr("yOffset") : 0 ;
 			
-			var sub_glif = new FontedGlif(name, base);
-			var sub_glif_surface = sub_glif.render(1000,1000, 1000);
+			var mat = [xscale, xyscale, yxscale, yscale, xoffset, yoffset];
 			
-			ctx.save();
-				ctx.transform(xscale, xyscale, yxscale, yscale, xoffset, yoffset);
-				ctx.drawImage(sub_glif_surface, 0, 0);
-			ctx.restore();
+			queue_draw = true;
+			draw_queue[base] = {matrix: mat, doc: null}; 
+			this_c.load(base);
 		},
 		
 		"component-dbg": function (item, ctx) {
@@ -193,60 +189,55 @@ function FontedGlif(name, glif) {
 		
 		console.log(out, parts);
 		return out + ".glif"
-	}
+	},
 	
-	this.render = function(w,h,em_width) {
-		if(!surface) {
-			surface = document.createElement("canvas");
-			surface.width = w;
-			surface.height = h;
-		}
+	this.render = function(doc, mat, em_width) {
 
 		var ctx = surface.getContext('2d');
 		
-		// doc might not have loaded yet, delay rendering
-		if(!doc) {
-			call_render = true;
-			em = em_width;
-		} else {
-			var fudge = em / 50;
-			var scale = (surface.width 
-			- fudge) / em;
-			//console.log(surface.width);
-			ctx.translate(0, surface.height - fudge);
-			ctx.transform(1,0,0,-1,0,0);
-			ctx.scale(scale, scale);
-			//ctx.scale(.2, .2);
 
-			$("outline", doc).children().each(function () {
-				
-				renderers[this.tagName](this, ctx);
-			
-			});
-			
-			$("outline", doc).children().each(function () {
-				
-				renderers[this.tagName + "-dbg"](this, ctx);
-			
-			});
-			
-		}
+		em = em_width;
+
+		var fudge = em / 50;
+		var scale = (surface.width 
+		- fudge) / em;
+
+		ctx.translate(0, surface.height - fudge);
+		ctx.transform(1,0,0,-1,0,0);
+		ctx.scale(scale, scale);
 		
-		return surface;
-	}
+		
+		$("outline", doc).children().each(function () {
 	
-	this.load = function(name, glif) {
+			renderers[this.tagName](this, ctx);
+
+		});
+
+		/*$("outline", doc).children().each(function () {
+	
+			renderers[this.tagName + "-dbg"](this, ctx);
+
+		});*/
+		
+		console.log(queue_draw, draw_queue);
+			
+	},
+
+	
+	this.load = function(glif) {
 		//console.log("Reticulating Splines");
 		
-		server_path = "fonts/" + name + ".ufo/glyphs/" + this.glyph_2_filename(glif);
+		server_path = "fontservice/" + name + ".ufo/" + glif;
+		
 		$.ajax({
 			type: "GET",
 			dataType: "xml",
 			url: server_path,
 			success: function(data, text) {
-				doc = data;
-				if(call_render) {
-					this_c.render();
+				if(queue_draw) {
+					draw_queue[glif].doc = data;
+				} else {
+					this_c.render(data, null, 1000);
 				}
 			},
 			error: function(xhr, status, error){
@@ -255,21 +246,29 @@ function FontedGlif(name, glif) {
 		});
 	}
 	
-	this.load(name, glif);
+	this.load(glif);
 };
 
 jQuery.fn.fonted = function (font) {
 	var glyphs = [
-		//new FontedGlif(font, "F_A_B"),
-		//new FontedGlif(font, "testglyph1"),
-		new FontedGlif(font, "F"),
-		new FontedGlif(font, "A"),
-		new FontedGlif(font, "B"),
-		new FontedGlif(font, "Zcaron")
+		//"F_A_B",
+		//"testglyph1",
+		"F",
+		"A",
+		"B",
+		"Zcaron",
+		"Agrave"
 	];
+	
 	return this.each(function(){
 		for(var i = 0; i < glyphs.length; i++) {
-			$(this).append(glyphs[i].render(1000,1000, 1000));
+			var surface = document.createElement("canvas");
+			surface.width = 1000;
+			surface.height = 1000;
+			
+			var let = new FontedGlif(font, glyphs[i],surface);
+			
+			$(this).append(surface);
 		}
 	});
 };
