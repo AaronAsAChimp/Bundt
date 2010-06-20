@@ -1,4 +1,4 @@
 AddType text/xml .glif
 
 RewriteEngine on
-RewriteRule fontservice/([^/\.]+).([a-z]+)/([A-Za-z_]+)/? bundt.fontservice.get.glyph.php?font=$1&format=$2&name=$3 [L]
+RewriteRule fontservice/([^/\.]+).([a-z]+) bundt.fontservice.get.php?font=$1&format=$2 [L]
