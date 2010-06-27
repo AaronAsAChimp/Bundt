@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    id="testsuite-font"
+    width="100%"
+    height="100%"
+    viewBox="0 0 480 360"
+    version="1.1"
+    baseProfile="tiny">
+
+	<defs>
+		<!--
+		Font to test for errors in selecting the wrong font variant
+		
+			Test Setup:
+			Bundt should attempt to select the "one" glyph from test-suite-font-01.
+
+			Passing Criteria:
+			In order to pass this test, bundt must never select this font. If
+			this font is selected it will display a large X with the word fail
+			in the center.
+		-->
+		<font horiz-adv-x="1024">
+			<font-face font-family="testsuite-font-02" units-per-em="1024" />
+			<missing-glyph horiz-adv-x="1024" d="M128 0V1638H896V0H128zM256 128H768V1510H256V128z"/>
+			<glyph unicode="1" glyph-name="one" horiz-adv-x="1024" d="M 716.25 136.71875 L 512 341.53125 L 307.75 137.28125 L 137 308.03125 L 341.25 512.28125 L 137 716.53125 L 307.75 887.28125 L 512 683.03125 L 716.25 887.28125 L 887 716.53125 L 682.75 512.28125 L 887 307.46875 L 716.25 136.71875 z M 412.25 448.78125 L 462.03125 448.78125 L 462.03125 470.3125 L 433.15625 470.3125 L 433.15625 507.6875 L 452.53125 507.6875 L 452.53125 529.21875 L 433.15625 529.21875 L 433.15625 591.21875 L 412.25 591.21875 L 412.25 448.78125 z M 486.21875 448.78125 L 511.78125 448.78125 L 533.28125 591.21875 L 512.9375 591.21875 L 509.0625 562.15625 L 488.9375 562.15625 L 485.0625 591.21875 L 464.71875 591.21875 L 486.21875 448.78125 z M 542.8125 448.78125 L 563.71875 448.78125 L 563.71875 591.21875 L 542.8125 591.21875 L 542.8125 448.78125 z M 579.125 448.78125 L 600.0625 448.78125 L 600.0625 571.84375 L 627.75 571.84375 L 627.75 591.21875 L 579.125 591.21875 L 579.125 448.78125 z M 498.40625 491.40625 L 497.84375 495.09375 L 491.84375 540.0625 L 506.15625 540.0625 L 500.15625 495.09375 L 499.59375 491.40625 L 498.40625 491.40625 z"/>
+		</font>
+
+		<!-- 
+		Basic test font to test different types of shapes
+		-->
+		<font horiz-adv-x="1024">
+			<font-face font-family="testsuite-font-01" units-per-em="1024" />
+			<missing-glyph horiz-adv-x="1024" d="M128 0V1638H896V0H128zM256 128H768V1510H256V128z"/>
+			<glyph unicode="1" glyph-name="one" horiz-adv-x="1024" d="M 50 50 v 250 h 250 z"/>
+			<glyph unicode="2" glyph-name="two" horiz-adv-x="1024" d="M 50 50 V 250 H 250 z"/>
+		</font>
+	</defs>
+</svg>
