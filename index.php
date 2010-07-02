@@ -77,12 +77,28 @@ PROLOG;
 		<label for="email">Email Address</label><input type="email" name="email" id="email" placeholder="johnsmith@gmail.com" />
 		<label for="website">Webiste</label><input type="url" name="site" id="site" placeholder="http://www.example.com" />
 		
-		<label id="openid-google-label"><input type="radio" name="openid" id="openid-google" value="www.google.com/accounts/o8/id" />Google</label>
-		<label id="openid-yahoo-label"><input type="radio" name="openid" id="openid-yahoo" value="me.yahoo.com" />Yahoo!</label>
-		<label id="openid-microsoft-label"><input type="radio" name="openid" id="openid-microsoft" value="accountservices.passport.net/" />Windows Live</label>
-		<label id="openid-launchpad-label"><input type="radio" name="openid" id="openid-launchpad" value="launchpad.net/~" />Launchpad</label>
-		<label id="openid-other-label"><input type="radio" name="openid" id="openid-other" value="other" />OpenID</label>
-
+		<div class="large-button">
+			<label id="openid-google-label"><input type="radio" name="openid" id="openid-google" value="www.google.com/accounts/o8/id" />Google</label>
+		</div>
+		
+		<div class="large-button">
+			<label id="openid-yahoo-label"><input type="radio" name="openid" id="openid-yahoo" value="me.yahoo.com" />Yahoo!</label>
+		</div>
+		
+		<div class="large-button">
+			<label id="openid-microsoft-label"><input type="radio" name="openid" id="openid-microsoft" value="accountservices.passport.net/" />Windows Live</label>
+		</div>
+		
+		<div class="large-button">
+			<label id="openid-launchpad-label"><input type="radio" name="openid" id="openid-launchpad" value="launchpad.net/~" />Launchpad</label>
+			<input type="text" name="openid-launchpad-username" id="openid-launchpad-username" placeholder="Launchpad Username" />
+		</div>
+		
+		<div class="large-button">
+			<label id="openid-other-label"><input type="radio" name="openid" id="openid-other" value="other" />OpenID</label>
+			<input type="text" name="openid-other-url" id="openid-other-url" placeholder="OpenID Identifier" />
+		</div>
+		
 		<input type="submit" value="Sign up &raquo;" />
 	</form>
 <?php
