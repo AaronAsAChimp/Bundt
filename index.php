@@ -1,8 +1,4 @@
 <?php
-	require_once("libs/glip/lib/glip.php");
-	
-	$repo = new Git(".git");
-	
 	echo <<< PROLOG
 <?xml version="1.0" encoding="UTF-8"?>
 PROLOG;
@@ -11,37 +7,12 @@ PROLOG;
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg" xml:lang="en" lang="en">
 <head>
 <script src="libs/jquery.js" type="text/javascript"></script>
+<script src="js/jquery.bundt.extensions.js" type="text/javascript"></script>
 <script>
 	$(function () {
 	
-		$.fn.typing_stopped = function (funk) {
-			return this.each(function () {
-				var pauselength = 750;
-				var timer = null;
-				var ele = this;
-
-				$(this).keydown(function () {
-					if(timer != null) {
-						clearTimeout(timer);
-					}
-					
-					timer = setTimeout(function() {
-						funk.call(ele);
-					}, pauselength);
-				});
-				
-				$(this).blur(function () {
-					if(timer != null) {
-						clearTimeout(timer);
-					}
-					
-					funk.call(ele);
-				});
-			});
-		};
-	
 		$("#email").typing_stopped(function () {
-			console.log(($(this).val().split("@", 2))[1]);
+			//console.log(($(this).val().split("@", 2))[1]);
 			switch(($(this).val().split("@", 2))[1]) {
 				case "gmail.com":
 					$("#openid-google-label").addClass("highlight");
@@ -86,10 +57,6 @@ PROLOG;
 		</div>
 		
 		<div class="large-button">
-			<label id="openid-microsoft-label"><input type="radio" name="openid" id="openid-microsoft" value="accountservices.passport.net/" />Windows Live</label>
-		</div>
-		
-		<div class="large-button">
 			<label id="openid-launchpad-label"><input type="radio" name="openid" id="openid-launchpad" value="launchpad.net/~" />Launchpad</label>
 			<input type="text" name="openid-launchpad-username" id="openid-launchpad-username" placeholder="Launchpad Username" />
 		</div>
@@ -101,9 +68,5 @@ PROLOG;
 		
 		<input type="submit" value="Sign up &raquo;" />
 	</form>
-<?php
-	var_dump(is_dir(".git"));
-	var_dump(sha1_hex($repo->getTip('master')));
-?>
 </body>
 </html>
