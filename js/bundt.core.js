@@ -1,8 +1,11 @@
 $(function () {
 	const service_url = "/fontservice/";
-	var font_name = "bundt-test-font";
-	var font_variant = "testsuite-font-01";
+	var font_name = "UbuntuTitle";
+	var font_variant = "UbuntuTitleBold";
+	var font_data = null;
 	var glyph = "one";
+	
+	var canvas = null;
 
 	function is_upper(character) {
 		return !(character.charCodeAt(0) & 0x20);
@@ -260,12 +263,38 @@ $(function () {
 	}
 	
 	$.get(service_url + font_name + ".svg", function(data) {
-		var canvas = Raphael("canvas", 1000, 1000);
+	
+		$("#font-face").replace_font_face("Bundt-Current", service_url + font_name + ".svg#" + font_variant);
+	
+		font_data = data;
+		
+		canvas = Raphael("canvas", 1000, 1000);
 		
 		// select the font family, the font-face tag is inside the font tag
 		var $font = $("font-face[font-family=" + font_variant + "]", data).parent();
 		
 		// extract the desired glyph
 		canvas.editable($("glyph[glyph-name=" + glyph + "]", $font).attr("d"));
+	});
+	
+	$("#canvas").editing_stopped(function () {
+		console.log($(font_data).toString());
+		
+		// select the font family, the font-face tag is inside the font tag
+		var $font = $("font-face[font-family=" + font_variant + "]", font_data).parent();
+		
+		// extract the desired glyph
+		$("glyph[glyph-name=" + glyph + "]", $font).attr("d", canvas.editable_path.toString());
+		
+		if(font_data != null && canvas != null) {
+			$.ajax({
+				type: "PUT",
+				url: service_url + font_name + ".svg",
+				data: $(font_data).toString(),
+				success: function(response) {
+					console.log("Got: " + $(response));
+				}
+			});
+		}
 	});
 })		

@@ -1,5 +1,10 @@
 AddType text/xml .glif
 
 RewriteEngine on
+RewriteCond %{REQUEST_METHOD} GET
 RewriteRule fontservice/([^/\.]+).([a-z]+) bundt.fontservice.get.php?font=$1&format=$2 [L]
+
+RewriteCond %{REQUEST_METHOD} PUT
+RewriteRule fontservice/([^/\.]+).([a-z]+) bundt.fontservice.put.php?font=$1&format=$2 [L]
+
 RewriteRule authservice/signup/? bundt.authservice.signup.php [L]
