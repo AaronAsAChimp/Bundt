@@ -5,7 +5,10 @@ include("bundt.tests.harness.php");
 
 class SessionTestSuite extends Harness {
 
-	public function setup() {}
+	public function setup() {
+		$this->set_suite_title("Bundt - Session Test Suite");
+		$this->set_suite_description("<p>These tests test Bundt's custom Session API.</p>");
+	}
 
 	public function run() {
 
