@@ -10,6 +10,9 @@ class Session implements ArrayAccess, Iterator, Countable {
 		}
 		$this->namespace = $name;
 		$this->session =& $_SESSION[$name];
+		if(!isset($_SESSION[$name])) {
+			$this->session = array();
+		}
 	}
 	
 	public static function destroy() {

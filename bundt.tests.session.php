@@ -80,11 +80,28 @@ class SessionTestSuite extends Harness {
 		
 		////////////////////////////////////////////////////////////////////////
 		
+		$this->set_title("\"Dry\" Iteration Test");
+		$this->set_description("properly handle an empty session.");
+		
+		$dry_iter = new Session("empty");
+		$stopper = false;
+		// if the body of this loop is executed this test fails
+		foreach($dry_iter as $nothing) {
+			// if the test is to fail make sure there is at least one full iteration
+			if($stopper) {
+				$this->fail();
+				break;
+			}
+			$stopper = true;
+		}
+
+		////////////////////////////////////////////////////////////////////////
+		
 		$this->set_title("Session Destruction Test");
 		
 		Session::destroy();
 		
-		$this->set_description("destroy all first session");
+		$this->set_description("destroy the first session");
 		$this->assert_not($sess);
 		
 	}

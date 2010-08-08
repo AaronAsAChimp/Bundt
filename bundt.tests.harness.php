@@ -12,6 +12,10 @@ abstract class Harness {
 	protected $storage = null;
 	protected $start_time = 0;
 	
+	final protected function fail() {
+		$this->test(false);
+	}
+	
 	final protected function assert(&$result) {
 		$this->test(isset($result));
 	}
