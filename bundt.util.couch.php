@@ -6,6 +6,7 @@ class Couch {
 	protected $document = null;
 	protected $database = null;
 	protected $response = "";
+	protected $view = "";
 	
 	// todo: move to an abstract class
 	protected function rest_get($path) {
@@ -21,12 +22,18 @@ class Couch {
 	
 	// todo: move to an abstract class
 	protected function rest_put($path, $body = null) {
+		
+		if(is_object($body) || is_array($body)) {
+			$body = json_encode($body);
+		} else if (is_null($body)) {
+			$body = "";
+		}
 
 		$context = stream_context_create(array(
 			'http'=> array(
 				'method' => 'PUT',
 				'header' => "Content-type: application/x-www-form-urlencoded",
-				'content' => ($body == null)? "": json_encode($body),
+				'content' => $body,
 				'ignore_errors' => true
 			)
 		));
@@ -35,14 +42,20 @@ class Couch {
 		return json_decode($this->response, true);
 	}
 	
-		// todo: move to an abstract class
+	// todo: move to an abstract class
 	protected function rest_post($path, $body = null) {
-
+		
+		if(is_object($body) || is_array($body)) {
+			$body = json_encode($body);
+		} else if (is_null($body)) {
+			$body = "";
+		}
+		
 		$context = stream_context_create(array(
 			'http'=> array(
 				'method' => 'POST',
 				'header' => "Content-type: application/x-www-form-urlencoded",
-				'content' => ($body == null)? "": json_encode($body),
+				'content' => $body,
 				'ignore_errors' => true
 			)
 		));
@@ -75,19 +88,26 @@ class Couch {
 		// if just the first parameter is specified were just referencing the database
 		// if first two are specified then were referencing a document in a database
 		// if all three are specified then were referencing a particular revision of a document in a database
+		// if the doc starts with _design treat the rev as the view name
 		
 		if($rev !== null && $db !== null && $doc !== null) {
-			$this->revision = $rev;
+			if(strpos($doc, "_design") === 0) {
+				$this->view = $rev;
+			} else {
+				$this->revision = $rev;
+			}
 			$this->document = $doc;
 			$this->database = $db;
 		} else if($rev !== null && $doc !== null) {
 			$this->revision = null;
 			$this->document = $rev;
 			$this->database = $doc;
+			$this->view = "";
 		} else {
 			$this->revision = null;
 			$this->document = null;
 			$this->database = $rev;
+			$this->view = "";
 		}
 		return $this;
 	}
@@ -104,6 +124,15 @@ class Couch {
 		return $this->rest_delete($this->build_path() . (($this->revision)?"?rev=" . $this->revision:""));
 	}
 	
+	function import ($file) {
+		if($this->database && !$this->document && !$this->revision) {
+			$contents = file_get_contents($file);
+			return $this->rest_post($this->build_path() . "_bulk_docs", $contents);	
+		}
+		
+		return false;
+	}
+	
 	function put($body) {
 		// if there was a revision specified add it to the request body
 		if($this->revision) {
@@ -118,10 +147,17 @@ class Couch {
 		}
 	}
 	
+	function count() {
+		$res = $this->rest_get($this->database . "/_all_docs/?limit=0");
+		return $res["total_rows"];
+	}
+	
 	function get() {
 		$path = $this->build_path();
 		if ($this->revision) {
 			$path .= "?rev=" . $this->revision;
+		} else if($this->view) {
+			$path .= "_view/" . $this->view;
 		} else if(!$this->document) {
 			$path .= "_all_docs/";
 		} 
@@ -129,4 +165,4 @@ class Couch {
 	}
 }
 
-$couch = new Couch("http://localhost:5984/");
+$couch = new Couch(COUCH_LOCATION);

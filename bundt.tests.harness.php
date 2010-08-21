@@ -24,7 +24,7 @@ abstract class Harness {
 		$this->test(!isset($result));
 	}
 	
-	final protected function equals($var, $val){
+	final protected function equals($var, $val) {
 		$this->test($var === $val);
 	}
 	
@@ -41,11 +41,10 @@ abstract class Harness {
 		}
 
 		echo "<div id=\"test", $this->counts["tests"], "\" class=\"", $pf," test\">";
-			echo "<h2>", $this->get_title(), "</h2>";
 			
-			echo "<div class\"description\">";
+			echo "<h3 class\"description\">";
 			echo $this->get_description();
-			echo "</div>";
+			echo "</h3>";
 			echo "<div class=\"conclusion\">The test <strong>", $pf, "</strong>.</div>";
 			
 			echo "<ul class=\"count-deltas\">";
@@ -71,6 +70,8 @@ abstract class Harness {
 	
 	final protected function set_title($title) {
 		$this->title = $title;
+		echo "</div>","<div class=\"ac\"></div>", "<div class=\"test-group\">";
+		echo "<h2>", $this->get_title(), "</h2>";
 	}
 	final protected function get_title() {
 		return $this->title;
@@ -229,12 +230,13 @@ abstract class Harness {
 STYLES;
 		echo "</head>";
 		echo "<body><div id=\"page\">";
+		
+		echo "<div class=\"test-suite\">";
 		echo "<h1>", $this->suite_title, "</h1>";
 		if($this->suite_description) {
-			echo "<div class=\"suite-description\">", $this->suite_description, "</div>";
+			echo "<div class=\"suite-description\">", $this->suite_description; // this tag is closed in the destructor
 		}
 
-		echo "<div class=\"test-suite\">";
 		$this->start_time = microtime(true);
 		
 		try {
@@ -251,7 +253,7 @@ STYLES;
 		
 		restore_error_handler();
 		error_reporting(); 
-
+		echo "</div>","<div class=\"ac\"></div>";
 		echo "<div class=\"test-results\"><h2>The tests took ", $end_time, "s</h2><ul>";
 		foreach($this->counts as $name => $count) {
 			echo "<li>", $name, ": ", $count, "</li>";

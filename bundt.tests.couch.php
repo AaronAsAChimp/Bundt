@@ -1,8 +1,9 @@
 <?php
 
+define('COUCH_LOCATION', "http://localhost:5984/");
+
 include("bundt.util.couch.php");
 include("bundt.tests.harness.php");
-
 
 class CouchTestSuite extends Harness {
 
@@ -34,17 +35,17 @@ class CouchTestSuite extends Harness {
 		$this->set_title("Test create on a database");
 		$this->set_description("create a database.");
 		
-		$res = $couch("bundt_tests")
+		$res = $couch("bundt-tests")
 			->create();
 			
-		$this->equals($res["db_name"], "bundt_tests");
+		$this->equals($res["db_name"], "bundt-tests");
 		
 		////////////////////////////////////////////////////////////////////////
 
 		$this->set_title("Test put");
 		$this->set_description("check for correct id.");
 		
-		$res = $couch("test01", "bundt_tests")
+		$res = $couch("test01", "bundt-tests")
 			->put( array(
 				"test" => "testvalue"
 			)); // should be {"ok":true,"id":"test01","rev": == REVISION NUMBER == }
@@ -57,7 +58,7 @@ class CouchTestSuite extends Harness {
 		
 		$this->set_title("Test Put without doc id");
 		
-		$res = $couch("bundt_tests")
+		$res = $couch("bundt-tests")
 			->put( array(
 				"test" => "made up value"
 			));
@@ -69,7 +70,7 @@ class CouchTestSuite extends Harness {
 		
 		////////////////////////////////////////////////////////////////////////
 	
-		$res = $couch("test01", "bundt_tests")
+		$res = $couch("test01", "bundt-tests")
 			->get(); // should be {"_id":"test01","_rev": == REVISION NUMBER MATCHING ABOVE ==,"test":"testvalue"}
 
 		$this->set_title("Test Get");
@@ -87,7 +88,7 @@ class CouchTestSuite extends Harness {
 		$this->set_title("Test updating an exisiting document");
 		$this->set_description("update the existing test document.");
 		
-		$res = $couch($revision,"test01", "bundt_tests")
+		$res = $couch($revision,"test01", "bundt-tests")
 			->put( array(
 				"test" => "another testvalue"
 			)); // should be {"ok":true,"id":"test01","rev": == REVISION NUMBER == }
@@ -101,7 +102,7 @@ class CouchTestSuite extends Harness {
 		
 		$this->set_title("Test getting a specific revision");
 		
-		$res = $couch($old_revision, "test01", "bundt_tests")
+		$res = $couch($old_revision, "test01", "bundt-tests")
 			->get();
 		
 		$this->set_description("get a specific revision of a document");
@@ -115,13 +116,8 @@ class CouchTestSuite extends Harness {
 		
 		////////////////////////////////////////////////////////////////////////
 
-		$res = $couch("bundt_tests")
+		$res = $couch("bundt-tests")
 			->get();
-			/* should be 
-		{"total_rows":1,"offset":0,"rows":[
-		{"id":"test01","key":"test01","value":{"rev": == REVISION NUMBER MATCHING ABOVE == }}
-		]}
-		*/
 
 		$this->set_title("Test get whole database");
 		$this->set_description("get expected number of rows.");
@@ -134,10 +130,50 @@ class CouchTestSuite extends Harness {
 		$this->equals($res["rows"][1]["id"], "test01");
 		
 		////////////////////////////////////////////////////////////////////////
+		
+		$count = $couch("bundt-tests")
+			->count();
+			
+		$this->set_title("Test counting database documents");
+		$this->set_description("get the correct count.");
+		$this->equals($count, 2);
+		
+		////////////////////////////////////////////////////////////////////////
+		
+		$file = "database/bundt-tests.json";
+		$res = $couch("bundt-tests")
+			->import($file);
+		
+		$this->set_title("Test importing documents to database.");
+		$this->set_description("import documents from <code>" . $file . "</code>.");
+		$this->equals($res[0]["id"], "test-from-imported-0");
+		
+		////////////////////////////////////////////////////////////////////////
+		
+		$res = $couch("sum-imported", "_design/imported", "bundt-tests")
+			->get();
+		
+		$this->set_title("Test Imported View");
+		$this->set_description("retrieve data from an imported view.");
+		$this->equals($res["rows"][0]["value"], 8);
+		
+		////////////////////////////////////////////////////////////////////////
+		
+		$res = $couch("test-from-imported-3", "bundt-tests")
+			->get();
+			
+		$this->set_title("Test For Residual Configuration");
+		$this->set_description("check for correct id.");
+		$this->equals($res["_id"], "test-from-imported-3");
+		
+		$this->set_description("check for correct data.");
+		$this->equals($res["value"], 2);
+		
+		////////////////////////////////////////////////////////////////////////
 	
 		$this->set_title("Test delete on a document");
 		$this->set_description("delete the test document.");
-		$res = $couch($revision, "test01", "bundt_tests")
+		$res = $couch($revision, "test01", "bundt-tests")
 			->delete();
 		$this->equals( $res["ok"], true );
 		
@@ -145,9 +181,17 @@ class CouchTestSuite extends Harness {
 	
 		$this->set_title("Test delete on a database");
 		$this->set_description("delete the test database.");
-		$res = $couch("bundt_tests")
+		$res = $couch("bundt-tests")
 			->delete();
 		$this->equals( $res["ok"], true );
+		
+		////////////////////////////////////////////////////////////////////////
+		
+		$this->set_title("Test getting a non-exsistant database");
+		$this->set_description("properly handle a non-existant database.");
+		
+		$res = $couch("bundt-tests")->get();
+		$this->equals($res["error"],"not_found");
 	}
 	
 	function teardown() {}

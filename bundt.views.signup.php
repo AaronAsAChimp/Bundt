@@ -6,8 +6,8 @@ PROLOG;
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg" xml:lang="en" lang="en">
 <head>
-<script src="libs/jquery.js" type="text/javascript"></script>
-<script src="js/jquery.bundt.extensions.js" type="text/javascript"></script>
+<script src="/libs/jquery.js" type="text/javascript"></script>
+<script src="/js/jquery.bundt.extensions.js" type="text/javascript"></script>
 <script>
 	$(function () {
 	

@@ -53,7 +53,7 @@
 		    //echo 'User ' . ($openid->validate() ? $_CLEAN_GET['openid_identity'] . ' has ' : 'has not ') . 'logged in.';
 		    if($openid->validate()) {
 		    	// Is it possible to clobber the record if the same email is used sign up a second time
-		    	$couch($signup_session["post"]["email"],"bundt")
+		    	$couch(strtolower($signup_session["post"]["email"]),"bundt-users")
 		    		->put(array(
 		    			"email" => $signup_session["post"]["email"],
 		    			"name" => $signup_session["post"]["name"],
