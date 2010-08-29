@@ -17,7 +17,6 @@ class Couch {
 			)
 		));
 		$this->response = file_get_contents($this->location . $path,  false, $context);
-		return json_decode($this->response, true);
 	}
 	
 	// todo: move to an abstract class
@@ -39,7 +38,6 @@ class Couch {
 		));
 		
 		$this->response = file_get_contents($this->location . $path,  false, $context);
-		return json_decode($this->response, true);
 	}
 	
 	// todo: move to an abstract class
@@ -61,7 +59,6 @@ class Couch {
 		));
 		
 		$this->response = file_get_contents($this->location . $path,  false, $context);
-		return json_decode($this->response, true);
 	}
 	
 	// todo: move to an abstract class
@@ -73,7 +70,6 @@ class Couch {
 			)
 		));
 		$this->response = file_get_contents($this->location . $path,  false, $context);
-		return json_decode($this->response, true);
 	}
 	
 	protected function build_path() {
@@ -112,28 +108,31 @@ class Couch {
 		return $this;
 	}
 	
-	function relax() {
-		return $this->rest_get("");
+	function &relax() {
+		$this->rest_get("");
+		return $this;
 	}
 	
-	function create() {
-		return $this->rest_put($this->build_path());
+	function &create() {
+		$this->rest_put($this->build_path());
+		return $this;
 	}
 	
-	function delete() {
-		return $this->rest_delete($this->build_path() . (($this->revision)?"?rev=" . $this->revision:""));
+	function &delete() {
+		$this->rest_delete($this->build_path() . (($this->revision)?"?rev=" . $this->revision:""));
+		return $this;
 	}
 	
-	function import ($file) {
+	function &import ($file) {
 		if($this->database && !$this->document && !$this->revision) {
 			$contents = file_get_contents($file);
-			return $this->rest_post($this->build_path() . "_bulk_docs", $contents);	
+			$this->rest_post($this->build_path() . "_bulk_docs", $contents);	
 		}
 		
-		return false;
+		return $this;
 	}
 	
-	function put($body) {
+	function &put($body) {
 		// if there was a revision specified add it to the request body
 		if($this->revision) {
 			$body["_rev"] = $this->revision;
@@ -141,18 +140,20 @@ class Couch {
 		
 		// if there is a document id use the PUT verb, otherwise use POST
 		if($this->document) {
-			return $this->rest_put($this->build_path(), $body);
+			$this->rest_put($this->build_path(), $body);
 		} else {
-			return $this->rest_post($this->build_path(), $body);
+			$this->rest_post($this->build_path(), $body);
 		}
+		
+		return $this;
 	}
 	
 	function count() {
-		$res = $this->rest_get($this->database . "/_all_docs/?limit=0");
+		$res = $this->response();
 		return $res["total_rows"];
 	}
 	
-	function get() {
+	function &get() {
 		$path = $this->build_path();
 		if ($this->revision) {
 			$path .= "?rev=" . $this->revision;
@@ -161,7 +162,14 @@ class Couch {
 		} else if(!$this->document) {
 			$path .= "_all_docs/";
 		} 
-		return $this->rest_get($path);
+		
+		$this->rest_get($path);
+		
+		return $this;
+	}
+	
+	function response() {
+		return json_decode($this->response, true);
 	}
 }
 

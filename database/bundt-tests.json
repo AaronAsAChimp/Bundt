@@ -1,0 +1,18 @@
+{
+	"docs": [
+		{"_id": "test-from-imported-0", "value": 2},
+		{"_id": "test-from-imported-1", "value": 2},
+		{"_id": "test-from-imported-2", "value": 2},
+		{"_id": "test-from-imported-3", "value": 2},
+		{
+			"_id": "_design/imported",
+			"language": "javascript",
+			"views": {
+				"sum-imported": {
+					"map": "function (doc) { if( doc._id.match(/^test-from-imported/)) { emit(doc._id, doc.value) } }",
+					"reduce": "function(keys, values) { return sum(values) }"
+				}
+			}
+		}
+	]
+}

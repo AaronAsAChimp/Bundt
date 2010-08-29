@@ -74,7 +74,7 @@
 		echo $e->getMessage();
 	}
 	
-	header('Location: ' . $new_location);
+//	header('Location: ' . $new_location);
 		
 	echo "<pre>";
 	var_dump($_GET, $_CLEAN_GET);

@@ -1,0 +1,13 @@
+{
+	"docs": [
+		{
+			"_id": "_design/user",
+			"language": "javascript",
+			"views": {
+				"administrators": {
+					"map": "function(doc) {\n  if(doc.role === 8) {\n    emit(null, doc);\n  }\n}",
+				}
+			}
+		}
+	]
+}

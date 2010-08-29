@@ -20,7 +20,7 @@ if(!is_file("bundt.settings.php")) {
 		),
 		"test" => function() {
 			global $couch;
-			$info = $couch->relax();
+			$info = $couch->relax()->response();
 			return $info && (version_compare($info["version"], "0.10.0", ">="));
 		}
 	));
@@ -31,8 +31,8 @@ if(!is_file("bundt.settings.php")) {
 		"failure" => "The database could not be initialized. Please check that CouchDB has been setup properly.",
 		"test" => function () {
 			global $couch;
-			$users = $couch("bundt-users")->get();
-			$fonts = $couch("bundt-fonts")->get();
+			$users = $couch("bundt-users")->get()->response();
+			$fonts = $couch("bundt-fonts")->get()->response();
 			return !isset($users["error"]) && !isset($fonts["error"]);
 		},
 		"automatic" => function () {
