@@ -11,6 +11,7 @@ abstract class Harness {
 	protected $failed_tests = "";
 	protected $storage = null;
 	protected $start_time = 0;
+	protected $result_tracking = array();
 	
 	final protected function fail() {
 		$this->test(false);
@@ -82,6 +83,11 @@ abstract class Harness {
 	}
 	final protected function get_description() {
 		return (($this->result)? "Succeeded to ": "Failed to ") . $this->description;
+	}
+	
+	final protected function get_tracking_file_name() {
+		$obj = new ReflectionObject($this);
+		return "test-results/" . $obj->getShortName() . ".json";
 	}
 	
 	final protected function store($name, &$item) {
@@ -162,6 +168,14 @@ abstract class Harness {
 		
 		$this->storage = array();
 		$this->setup();
+		
+		// Setup test tracking
+		$working_dir = getcwd();
+		chdir( dirname( __FILE__ ) );
+		if(is_file($this->get_tracking_file_name())) {
+			$this->results_tracking = json_decode(file_get_contents($this->get_tracking_file_name()), true);
+		}
+		chdir( $working_dir );
 		
 		echo "<html>";
 		echo "<head><title>", $this->suite_title, "</title>";
@@ -254,9 +268,31 @@ STYLES;
 		$this->teardown();
 		
 		restore_error_handler();
-		error_reporting(); 
+		error_reporting();
+
+		$working_dir = getcwd();
+		chdir( dirname( __FILE__ ) );
+		var_dump(is_dir("test-results"), is_file($this->get_tracking_file_name()));
+		//if(is_writable($this->get_tracking_file_name())) {
+			
+			$this->results_tracking[time()] = $this->counts;
+			$this->results_tracking[time()]["elapsed"] = $end_time;
+		
+			$archive_success = file_put_contents($this->get_tracking_file_name(), json_encode($this->results_tracking));
+		//} else {
+			//$archive_success = false;
+			//echo " here";
+		//}
+		chdir($working_dir);
+
 		echo "</div>","<div class=\"ac\"></div>";
-		echo "<div class=\"test-results\"><h2>The tests took ", $end_time, "s</h2><ul>";
+		echo "<div class=\"test-results\"><h2>The tests took ", $end_time, "s</h2>";
+		if($archive_success) {
+			echo "<p>These test results were archived in <code>" . $this->get_tracking_file_name() . "</code>.</p>";
+		} else {
+			echo "<p>There was a problem attempting to archive the test results.</p>";
+		}
+		echo"<ul>";
 		foreach($this->counts as $name => $count) {
 			echo "<li>", $name, ": ", $count, "</li>";
 		}
