@@ -1,28 +1,29 @@
 <?php
 
-require_once("bundt.util.session.php");
+require_once("bundt.util.settings.php");
 
 class Install {
 	protected $session = null;
+	protected $settings = null;
 	protected $steps = null;
+	
 	public function step($step) {
 		array_push($this->steps, $step);
 	}
 	
 	public function process_settings() {
-		$this->session = new Session("install");
 		foreach($this->steps as $step) {
 			if(isset($step["prompt"])) {
 				foreach($step["prompt"] as $input) {
-					// check for posted data and store it in a session
+					// check for posted data and store it in a setting
 					if(isset($input["name"]) && isset($_POST[$input["name"]])) {
-						$this->session[$input["name"]] = filter_input(INPUT_POST, $input["name"], $input["filter"]);
-					} else if(!isset($this->session[$input["name"]]) && isset($input["value"])) {
-						$this->session[$input["name"]] = $input["value"];
+						$this->settings[$input["name"]] = filter_input(INPUT_POST, $input["name"], $input["filter"]);
+					} else if(!isset($this->settings[$input["name"]]) && isset($input["value"])) {
+						$this->settings[$input["name"]] = $input["value"];
 					}
 				
 					// redefine the constants
-					define($input["name"], $this->session[$input["name"]]);
+					//define($input["name"], $this->session[$input["name"]]);
 				}
 			}
 		}
@@ -135,7 +136,10 @@ MESSAGE;
 	}
 	
 	public function __construct() {
+		global $settings;
 		$this->steps = array();
+		$this->settings =& $settings;
+		$this->session = $this->settings->get_session();
 	}
 }
 

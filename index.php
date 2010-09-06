@@ -50,7 +50,7 @@ if(!is_file("bundt.settings.php")) {
 		"failure" => " <a href=\"/signup/\">Please create your account &raquo;</a>",
 		"test" => function() {
 			global $couch;
-			return $couch("bundt-users")->count() > 0; // TODO this doesn't count properly
+			return $couch("users", "_design/user", "bundt-users")->count() > 0;
 		}
 	));
 	

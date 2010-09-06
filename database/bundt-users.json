@@ -5,7 +5,10 @@
 			"language": "javascript",
 			"views": {
 				"administrators": {
-					"map": "function(doc) {\n  if(doc.role === 8) {\n    emit(null, doc);\n  }\n}",
+					"map": "function(doc) {\n  if(doc.role === 8) {\n    emit(null, doc);\n  }\n}"
+				},
+				"users": {
+					"map": "function(doc) { if(doc.role) { emit(null, doc);}}"
 				}
 			}
 		}

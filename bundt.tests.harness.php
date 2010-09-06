@@ -105,7 +105,9 @@ abstract class Harness {
 	final public function print_error($class, $string, $file, $line, $context) {
 		echo "<div class=\"", $class ,"\">", $string, "<br />Line: ", $line, "<br />File: ", $file, "<br /><pre>";
 		var_dump($context);
-		echo "</pre></div>";
+		echo "</pre>";
+		$this->print_stored();
+		echo "</div>";
 	}
 	
 	abstract public function setup();

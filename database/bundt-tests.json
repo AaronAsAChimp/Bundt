@@ -1,9 +1,9 @@
 {
 	"docs": [
-		{"_id": "test-from-imported-0", "value": 2},
+		{"_id": "test-from-imported-0", "value": 1},
 		{"_id": "test-from-imported-1", "value": 2},
 		{"_id": "test-from-imported-2", "value": 2},
-		{"_id": "test-from-imported-3", "value": 2},
+		{"_id": "test-from-imported-3", "value": 3},
 		{
 			"_id": "_design/imported",
 			"language": "javascript",
@@ -11,6 +11,9 @@
 				"sum-imported": {
 					"map": "function (doc) { if( doc._id.match(/^test-from-imported/)) { emit(doc._id, doc.value) } }",
 					"reduce": "function(keys, values) { return sum(values) }"
+				},
+				"value-gte-two": {
+					"map": "function (doc) { if(doc.value >= 2) { emit(doc._id, doc) }}"
 				}
 			}
 		}

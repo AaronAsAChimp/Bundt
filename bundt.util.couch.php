@@ -1,5 +1,7 @@
 <?php
 
+require_once("bundt.util.settings.php");
+
 class Couch {
 	protected $location = "";
 	protected $revision = null;
@@ -105,6 +107,8 @@ class Couch {
 			$this->database = $rev;
 			$this->view = "";
 		}
+		
+		$this->response = "";
 		return $this;
 	}
 	
@@ -149,28 +153,39 @@ class Couch {
 	}
 	
 	function count() {
-		$res = $this->response();
+		$res = null;
+		if($this->response) {
+			$res = $this->response();
+		} else {
+			$res = $this->get(array("limit" => 0))->response();
+		}
+		
 		return $res["total_rows"];
 	}
 	
-	function &get() {
+	function &get($params = array()) {
 		$path = $this->build_path();
+
 		if ($this->revision) {
-			$path .= "?rev=" . $this->revision;
+			$params["rev"] = $this->revision;
 		} else if($this->view) {
 			$path .= "_view/" . $this->view;
 		} else if(!$this->document) {
 			$path .= "_all_docs/";
 		} 
 		
-		$this->rest_get($path);
+		$this->rest_get($path . "?" . http_build_query($params));
 		
 		return $this;
 	}
 	
 	function response() {
-		return json_decode($this->response, true);
+		$out = null;
+		if($this->response) {
+			$out = json_decode($this->response, true);
+		}
+		return $out;
 	}
 }
 
-$couch = new Couch(COUCH_LOCATION);
+$couch = new Couch($settings["COUCH_LOCATION"]);

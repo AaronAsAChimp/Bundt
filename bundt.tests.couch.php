@@ -140,12 +140,19 @@ class CouchTestSuite extends Harness {
 		
 		////////////////////////////////////////////////////////////////////////
 		
+		$this->set_title("Test counting database documents");
+		
+		$this->set_description("count items with existing response.");
 		$count = $couch("bundt-tests")
 			->get()
 			->count();
-			
-		$this->set_title("Test counting database documents");
-		$this->set_description("get the correct count.");
+
+		$this->equals($count, 2);
+		
+		$this->set_description("count items without existing response.");
+		$count = $couch("bundt-tests")
+			->count();
+
 		$this->equals($count, 2);
 		
 		////////////////////////////////////////////////////////////////////////
@@ -175,12 +182,18 @@ class CouchTestSuite extends Harness {
 			->get()
 			->response();
 			
-		$this->set_title("Test For Residual Configuration");
+		$this->set_title("Test For Residual Information");
 		$this->set_description("check for correct id.");
 		$this->equals($res["_id"], "test-from-imported-3");
 		
 		$this->set_description("check for correct data.");
-		$this->equals($res["value"], 2);
+		$this->equals($res["value"], 3);
+		
+		$this->set_description("check for residual response.");
+		$res = $couch("value-gte-two", "_design/imported", "bundt-tests")
+			->response();
+			
+		$this->assert_not($res);
 		
 		////////////////////////////////////////////////////////////////////////
 	
