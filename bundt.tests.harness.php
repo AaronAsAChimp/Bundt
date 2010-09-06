@@ -272,17 +272,15 @@ STYLES;
 
 		$working_dir = getcwd();
 		chdir( dirname( __FILE__ ) );
-		var_dump(is_dir("test-results"), is_file($this->get_tracking_file_name()));
-		//if(is_writable($this->get_tracking_file_name())) {
+		if(is_writable($this->get_tracking_file_name())) {
 			
 			$this->results_tracking[time()] = $this->counts;
 			$this->results_tracking[time()]["elapsed"] = $end_time;
 		
 			$archive_success = file_put_contents($this->get_tracking_file_name(), json_encode($this->results_tracking));
-		//} else {
-			//$archive_success = false;
-			//echo " here";
-		//}
+		} else {
+			$archive_success = false;
+		}
 		chdir($working_dir);
 
 		echo "</div>","<div class=\"ac\"></div>";
