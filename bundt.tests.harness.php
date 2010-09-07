@@ -181,6 +181,9 @@ abstract class Harness {
 		echo "<head><title>", $this->suite_title, "</title>";
 		echo "<script src=\"libs/jquery.js\"></script>";
 		echo "<script src=\"libs/raphael.js\"></script>";
+		echo "<script src=\"libs/graphael/g.raphael.js\"></script>";
+		echo "<script src=\"libs/graphael/g.line.js\"></script>";
+
 		echo <<<STYLES
 <style>
 	#page {
@@ -190,6 +193,14 @@ abstract class Harness {
 		font-family: Verdana;
 		font-size: 11px;
 		background: #ddd;
+	}
+	
+	#tracker-graph {
+		width: 589px;
+		height: 248px;
+		border: 1px solid black;
+		float: left;
+		margin: 4px 5px 5px 4px;
 	}
 	
 	.test, .error, .warning, .test-results {
@@ -272,15 +283,19 @@ STYLES;
 
 		$working_dir = getcwd();
 		chdir( dirname( __FILE__ ) );
-		if(is_writable($this->get_tracking_file_name())) {
+		$archive_contents = "";
+		
+		//if(is_writable($this->get_tracking_file_name())) {
 			
 			$this->results_tracking[time()] = $this->counts;
 			$this->results_tracking[time()]["elapsed"] = $end_time;
+			
+			$archive_contents = json_encode($this->results_tracking);
 		
-			$archive_success = file_put_contents($this->get_tracking_file_name(), json_encode($this->results_tracking));
-		} else {
-			$archive_success = false;
-		}
+			$archive_success = file_put_contents($this->get_tracking_file_name(), $archive_contents);
+		//} else {
+		//	$archive_success = false;
+		//}
 		chdir($working_dir);
 
 		echo "</div>","<div class=\"ac\"></div>";
@@ -302,9 +317,54 @@ STYLES;
 		
 		$this->print_stored();
 		echo "</div>";
+		echo "<div id=\"tracker-graph\"></div>";
 		echo "</div>";
 		
-		echo "<div class=\"ac\"></div></div></body>";
+		echo "<div class=\"ac\"></div></div>";
+		echo <<<SCRIPTS
+<script>
+	$(function () {
+		var tracking = $archive_contents;
+		var indexes = [];
+		var time = [];
+		var tests = [[],[]];
+		var errors = [[],[],[]];
+		var i = 0;
+		var accum = 0;
+		$.each(tracking,function (index) {
+			time[i] = this.elapsed * 10000;
+			accum += this.elapsed * 10000;
+			
+			// the tests that failed, add the tests that passed for a stacked graph
+			tests[1][i] = this.pass + this.fail;
+			// the tests that passed
+			tests[0][i] = this.pass;
+			
+			errors[2][i] = this.warnings;
+			errors[1][i] = this.exceptions;
+			errors[0][i] = this.errors;
+			
+			indexes[i] = i++;
+		})
+		
+		var canvas = Raphael("tracker-graph", $("#tracker-graph").width(), $("#tracker-graph").height());
+		var graph_height =  $("#tracker-graph").height() / 3;
+		
+		canvas.g.linechart(0,0, $("#tracker-graph").width(), graph_height, [indexes, [0,i - 1]], [time, [accum / i, accum / i]]);
+		var eg = canvas.g.linechart(0,graph_height, $("#tracker-graph").width(), graph_height, [indexes, indexes, indexes], errors);
+		eg.lines[0].attr("stroke", "red");
+		eg.lines[1].attr("stroke", "orange");
+		eg.lines[2].attr("stroke", "yellow");
+		
+		var tg = canvas.g.linechart(0,graph_height*2, $("#tracker-graph").width(), graph_height, [indexes, indexes], tests, {shade: true});
+		tg.lines[0].attr("stroke", "rgba(0, 128, 0)");
+		tg.shades[0].attr("fill", "rgba(0, 128, 0)");
+		tg.lines[1].attr("stroke", "rgba(255, 0, 0)");
+		tg.shades[1].attr("fill", "rgba(255, 0, 0)");
+	})
+</script>
+SCRIPTS;
+		echo "</body>";
 		echo "</html>";
 	}
 }
